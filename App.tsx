@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
-import { Operation, CalculationState, CalculationResult } from './types';
-import { Header } from './components/Header';
-import { InputField } from './components/InputField';
-import { ResultCard } from './components/ResultCard';
+import { Operation, CalculationState, CalculationResult } from './types.ts';
+import { Header } from './components/Header.tsx';
+import { InputField } from './components/InputField.tsx';
+import { ResultCard } from './components/ResultCard.tsx';
 
 const App: React.FC = () => {
   const [state, setState] = useState<CalculationState>({

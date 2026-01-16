@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CalculationResult, Operation } from '../types';
+import { CalculationResult, Operation } from '../types.ts';
 
 interface ResultCardProps {
   result: CalculationResult;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CalculationResult, Operation } from '../types.ts';
 
@@ -19,7 +18,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, operation }) => 
   const format = (num: number) => {
     return new Intl.NumberFormat('en-US', {
       maximumFractionDigits: 2,
-      minimumFractionDigits: 0
+      minimumFractionDigits: 2
     }).format(num);
   };
 

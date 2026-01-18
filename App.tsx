@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Operation, CalculationState, CalculationResult } from './types.ts';
 import { Header } from './components/Header.tsx';
 import { InputField } from './components/InputField.tsx';
@@ -12,6 +11,9 @@ const App: React.FC = () => {
     operation: Operation.ADD,
     extraValue: ''
   });
+
+  const baseInputRef = useRef<HTMLInputElement>(null);
+  const percInputRef = useRef<HTMLInputElement>(null);
 
   const calculation = useMemo((): CalculationResult => {
     const base = parseFloat(state.baseValue);
@@ -36,8 +38,47 @@ const App: React.FC = () => {
     };
   }, [state]);
 
+  const copyToClipboard = (value: number) => {
+    const formatted = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+    
+    // Using navigator.clipboard which is modern standard
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(formatted).catch(() => {
+        // Silent failure as per UX constraints
+      });
+    }
+  };
+
+  // Auto-copy whenever calculation becomes valid and changes
+  useEffect(() => {
+    if (calculation.isValid) {
+      copyToClipboard(calculation.finalResult);
+    }
+  }, [calculation.finalResult, calculation.isValid]);
+
   const handleInputChange = (field: keyof CalculationState, value: string) => {
     setState(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleBaseKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      percInputRef.current?.focus();
+    }
+  };
+
+  const handlePercKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (calculation.isValid) {
+        copyToClipboard(calculation.finalResult);
+      }
+      // Trigger a visual confirmation or blur if desired, 
+      // but requirements just say calculate, format, display, copy.
+    }
   };
 
   return (
@@ -51,8 +92,10 @@ const App: React.FC = () => {
               label="Base Number"
               value={state.baseValue}
               onChange={(v) => handleInputChange('baseValue', v)}
+              onKeyDown={handleBaseKeyDown}
               placeholder="e.g. 100"
               autoFocus
+              inputRef={baseInputRef}
             />
 
             <div className="grid grid-cols-2 gap-4">
@@ -60,7 +103,9 @@ const App: React.FC = () => {
                 label="Percentage (%)"
                 value={state.percentage}
                 onChange={(v) => handleInputChange('percentage', v)}
+                onKeyDown={handlePercKeyDown}
                 placeholder="%"
+                inputRef={percInputRef}
               />
               <div className="flex flex-col space-y-2">
                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">

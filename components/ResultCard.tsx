@@ -1,5 +1,6 @@
 import React from 'react';
-import { CalculationResult, Operation } from '../types.ts';
+// Fix: removed .ts extension from the module import path to resolve module resolution errors
+import { CalculationResult, Operation } from '../types';
 
 interface ResultCardProps {
   result: CalculationResult;
@@ -16,7 +17,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, operation }) => 
   }
 
   const format = (num: number) => {
-    // Force exactly two decimal places as requested
+    // Force exactly two decimal places for consistent financial-style display
     return num.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2

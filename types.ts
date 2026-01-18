@@ -1,19 +1,13 @@
-
+// Define the available operations for the percentage calculator
 export enum Operation {
-  ADD = 'add',
-  SUBTRACT = 'subtract'
+  ADD = 'ADD',
+  SUBTRACT = 'SUBTRACT',
 }
 
-export interface CalculationState {
-  baseValue: string;
-  percentage: string;
-  operation: Operation;
-  extraValue: string;
-}
-
+// Interface representing the outcome of a calculation
 export interface CalculationResult {
+  isValid: boolean;
   percentAmount: number;
   intermediateResult: number;
   finalResult: number;
-  isValid: boolean;
 }

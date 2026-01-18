@@ -1,123 +1,94 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { Operation, CalculationState, CalculationResult } from './types.ts';
-import { Header } from './components/Header.tsx';
-import { InputField } from './components/InputField.tsx';
-import { ResultCard } from './components/ResultCard.tsx';
+import React, { useState, useEffect } from 'react';
+import { Header } from './components/Header';
+import { InputField } from './components/InputField';
+import { ResultCard } from './components/ResultCard';
+import { CalculationResult, Operation } from './types';
 
 const App: React.FC = () => {
-  const [state, setState] = useState<CalculationState>({
-    baseValue: '',
-    percentage: '',
-    operation: Operation.ADD,
-    extraValue: ''
+  const [baseValue, setBaseValue] = useState<string>('');
+  const [percentValue, setPercentValue] = useState<string>('');
+  const [operation, setOperation] = useState<Operation>(Operation.ADD);
+  const [result, setResult] = useState<CalculationResult>({
+    isValid: false,
+    percentAmount: 0,
+    intermediateResult: 0,
+    finalResult: 0,
   });
 
-  const baseInputRef = useRef<HTMLInputElement>(null);
-  const percInputRef = useRef<HTMLInputElement>(null);
+  // Automatically recalculate the result when inputs or operation type changes
+  useEffect(() => {
+    const base = parseFloat(baseValue);
+    const percent = parseFloat(percentValue);
 
-  const calculation = useMemo((): CalculationResult => {
-    const base = parseFloat(state.baseValue);
-    const perc = parseFloat(state.percentage);
-    const extra = parseFloat(state.extraValue) || 0;
-
-    if (isNaN(base) || isNaN(perc)) {
-      return { percentAmount: 0, intermediateResult: 0, finalResult: 0, isValid: false };
-    }
-
-    const percentAmount = base * (perc / 100);
-    const intermediateResult = state.operation === Operation.ADD 
-      ? base + percentAmount 
-      : base - percentAmount;
-    const finalResult = intermediateResult + extra;
-
-    return {
-      percentAmount,
-      intermediateResult,
-      finalResult,
-      isValid: true
-    };
-  }, [state]);
-
-  const copyResultToClipboard = (val: number) => {
-    const formatted = val.toFixed(2);
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(formatted).catch(() => {
-        // Fallback or silent fail as per UX constraints
+    if (!isNaN(base) && !isNaN(percent)) {
+      const percentAmount = (base * percent) / 100;
+      const finalResult = operation === Operation.ADD ? base + percentAmount : base - percentAmount;
+      
+      setResult({
+        isValid: true,
+        percentAmount,
+        intermediateResult: base,
+        finalResult,
+      });
+    } else {
+      setResult({
+        isValid: false,
+        percentAmount: 0,
+        intermediateResult: 0,
+        finalResult: 0,
       });
     }
-  };
-
-  const handleInputChange = (field: keyof CalculationState, value: string) => {
-    setState(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleBaseKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      percInputRef.current?.focus();
-    }
-  };
-
-  const handlePercKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      // On Enter in percentage, we finalize the calculation and copy
-      if (calculation.isValid) {
-        copyResultToClipboard(calculation.finalResult);
-      }
-    }
-  };
+  }, [baseValue, percentValue, operation]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-slate-50">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden transition-all">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 font-sans">
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden">
         <Header />
         
-        <div className="p-6 sm:p-8 space-y-6">
+        <div className="p-8 pt-4 space-y-6">
+          {/* Operation Toggle */}
+          <div className="flex bg-slate-100 p-1 rounded-xl">
+            <button
+              onClick={() => setOperation(Operation.ADD)}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+                operation === Operation.ADD 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Add %
+            </button>
+            <button
+              onClick={() => setOperation(Operation.SUBTRACT)}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+                operation === Operation.SUBTRACT 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Subtract %
+            </button>
+          </div>
+
+          {/* Input Fields */}
           <div className="space-y-4">
             <InputField
-              label="Base Number"
-              value={state.baseValue}
-              onChange={(v) => handleInputChange('baseValue', v)}
-              onKeyDown={handleBaseKeyDown}
+              label="Base Amount"
+              value={baseValue}
+              onChange={setBaseValue}
               placeholder="e.g. 100"
               autoFocus
-              inputRef={baseInputRef}
             />
-
-            <div className="grid grid-cols-2 gap-4">
-              <InputField
-                label="Percentage (%)"
-                value={state.percentage}
-                onChange={(v) => handleInputChange('percentage', v)}
-                onKeyDown={handlePercKeyDown}
-                placeholder="%"
-                inputRef={percInputRef}
-              />
-              <div className="flex flex-col space-y-2">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
-                  Operation
-                </label>
-                <select
-                  value={state.operation}
-                  onChange={(e) => handleInputChange('operation', e.target.value as Operation)}
-                  className="h-12 w-full px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all appearance-none cursor-pointer text-sm font-medium"
-                >
-                  <option value={Operation.ADD}>Add %</option>
-                  <option value={Operation.SUBTRACT}>Subtract %</option>
-                </select>
-              </div>
-            </div>
-
             <InputField
-              label="Extra Number (Optional)"
-              value={state.extraValue}
-              onChange={(v) => handleInputChange('extraValue', v)}
-              placeholder="e.g. 25"
+              label="Percentage"
+              value={percentValue}
+              onChange={setPercentValue}
+              placeholder="e.g. 15"
             />
           </div>
 
-          <ResultCard result={calculation} operation={state.operation} />
+          {/* Dynamic Result Display */}
+          <ResultCard result={result} operation={operation} />
         </div>
       </div>
     </div>

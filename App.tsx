@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Operation, CalculationState, CalculationResult } from './types.ts';
 import { Header } from './components/Header.tsx';
 import { InputField } from './components/InputField.tsx';
@@ -38,26 +38,14 @@ const App: React.FC = () => {
     };
   }, [state]);
 
-  const copyToClipboard = (value: number) => {
-    const formatted = new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
-    
-    // Using navigator.clipboard which is modern standard
+  const copyResultToClipboard = (val: number) => {
+    const formatted = val.toFixed(2);
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(formatted).catch(() => {
-        // Silent failure as per UX constraints
+        // Fallback or silent fail as per UX constraints
       });
     }
   };
-
-  // Auto-copy whenever calculation becomes valid and changes
-  useEffect(() => {
-    if (calculation.isValid) {
-      copyToClipboard(calculation.finalResult);
-    }
-  }, [calculation.finalResult, calculation.isValid]);
 
   const handleInputChange = (field: keyof CalculationState, value: string) => {
     setState(prev => ({ ...prev, [field]: value }));
@@ -73,16 +61,15 @@ const App: React.FC = () => {
   const handlePercKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+      // On Enter in percentage, we finalize the calculation and copy
       if (calculation.isValid) {
-        copyToClipboard(calculation.finalResult);
+        copyResultToClipboard(calculation.finalResult);
       }
-      // Trigger a visual confirmation or blur if desired, 
-      // but requirements just say calculate, format, display, copy.
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-slate-50">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden transition-all">
         <Header />
         

@@ -16,10 +16,11 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, operation }) => 
   }
 
   const format = (num: number) => {
-    return new Intl.NumberFormat('en-US', {
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 2
-    }).format(num);
+    // Force exactly two decimal places as requested
+    return num.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   };
 
   return (

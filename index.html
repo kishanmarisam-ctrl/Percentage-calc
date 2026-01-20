@@ -181,15 +181,6 @@
             font-size: 14px;
         }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
-  }
-}
-</script>
 </head>
 <body>
 
@@ -231,16 +222,16 @@
             <div id="result-area">
                 <div class="result-row">
                     <span>Percent Amount</span>
-                    <strong id="res-perc">0.00</strong>
+                    <strong id="res-perc">0</strong>
                 </div>
                 <div class="result-row">
                     <span id="label-op">Adjusted Base</span>
-                    <strong id="res-adj">0.00</strong>
+                    <strong id="res-adj">0</strong>
                 </div>
                 <div class="divider"></div>
                 <div class="total-display">
                     <div class="total-label">Final Result</div>
-                    <div class="total-value" id="res-total">0.00</div>
+                    <div class="total-value" id="res-total">0</div>
                 </div>
             </div>
         </div>
@@ -263,10 +254,16 @@
             const labelOp = document.getElementById('label-op');
 
             /**
-             * Formats numbers to exactly two decimal places.
+             * Formats numbers conditionally:
+             * Whole number -> no decimals
+             * Not a whole number -> exactly two decimals
              */
             function format(num) {
-                return num.toFixed(2);
+                if (Number.isInteger(num)) {
+                    return num.toString();
+                } else {
+                    return num.toFixed(2);
+                }
             }
 
             /**
@@ -289,17 +286,18 @@
                 const adjBase = mode === 'add' ? baseValue + percAmt : baseValue - percAmt;
                 const total = adjBase + extraValue;
 
-                // Update text displays
+                // Update text displays with conditional formatting
+                const formattedResult = format(total);
                 resPerc.textContent = format(percAmt);
                 resAdj.textContent = format(adjBase);
-                resTotal.textContent = format(total);
+                resTotal.textContent = formattedResult;
                 labelOp.textContent = mode === 'add' ? 'Base + Percent' : 'Base - Percent';
 
                 // Display logic
                 placeholder.style.display = 'none';
                 resultArea.style.display = 'block';
 
-                return format(total);
+                return formattedResult;
             }
 
             /**
@@ -331,9 +329,14 @@
             percInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    const result = calculate();
-                    if (result !== null) {
-                        copyToClipboard(result);
+                    // Always trigger calculation for UI update
+                    const numericResult = calculate();
+                    const percVal = percInput.value;
+                    
+                    if (numericResult !== null && percVal !== "") {
+                        // Copy generated text string: <ANSWER> with <PERCENTAGE>% off coupon
+                        const textToCopy = numericResult + " with " + percVal + "% off coupon";
+                        copyToClipboard(textToCopy);
                     }
                 }
             });
